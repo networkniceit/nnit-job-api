@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "NNIT Jobs",
+    "slug": "nnit-jobs-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "owner": "nnit_ai_freelancer",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.nnit.jobs"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a"
+      },
+      "package": "com.nnit.jobs"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e9349b5d-e462-4c6c-8c86-9039bd4879c9"
+      }
+    }
+  }
+}
