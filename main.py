@@ -131,6 +131,18 @@ def german_query(query):
     return ""
 
 
+COUNTRY_WORDS = {"germany", "deutschland", "de", "europe"}
+
+
+def place_term(requested_location):
+    """Reduce a typed location such as '32427 minden germany' to the place the German sources understand."""
+    words = [w for w in re.findall(r"[^\W\d_][\w'-]*|\d{5}", requested_location.casefold()) if w not in COUNTRY_WORDS]
+    names = [w for w in words if not w.isdigit()]
+    if names:
+        return " ".join(names)
+    return " ".join(words)  # only a postcode was typed
+
+
 def text_matches(term_sets, text):
     haystack = text.casefold()
     return any(terms and all(term in haystack for term in terms) for terms in term_sets)
@@ -291,8 +303,9 @@ async def arbeitnow_jobs(client, query, term_sets, requested_location):
                 continue
             job_location = (job.get("location", "") or "").strip()
             is_remote = bool(job.get("remote"))
-            if requested_location and requested_location not in ("germany", "deutschland"):
-                if requested_location not in job_location.casefold():
+            place = place_term(requested_location)
+            if place:
+                if place not in job_location.casefold():
                     continue
             jobs.append(make_job(
                 "arbeitnow", title, job.get("url", ""), description,
@@ -308,8 +321,9 @@ async def arbeitnow_jobs(client, query, term_sets, requested_location):
 async def arbeitsagentur_jobs(client, query, term_sets, requested_location):
     german = german_query(query)
     params = {"was": german or query, "angebotsart": 1, "size": 50, "page": 1}
-    if requested_location and requested_location not in ("germany", "deutschland"):
-        params["wo"] = requested_location
+    place = place_term(requested_location)
+    if place:
+        params["wo"] = place
     response = await client.get(
         BA_SEARCH_URL, params=params,
         headers={"X-API-Key": BA_CLIENT_ID, "Accept": "application/json"},
