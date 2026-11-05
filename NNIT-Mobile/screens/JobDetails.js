@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { getJobDetail } from '../services/jobsApi';
+import { isJobSaved, saveJob, removeSavedJob } from '../services/savedJobs';
 
 const WORK_TYPE_LABELS = { remote: 'Remote', hybrid: 'Hybrid', onsite: 'On-site' };
 
@@ -20,6 +21,18 @@ export default function JobDetails({ route }) {
   const [detail, setDetail] = useState(null);
   const [detailError, setDetailError] = useState('');
   const [loadingDetail, setLoadingDetail] = useState(!!job.reference);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    isJobSaved(job).then(value => { if (active) setSaved(value); });
+    return () => { active = false; };
+  }, [job]);
+
+  const toggleSaved = async () => {
+    if (saved) { await removeSavedJob(job); setSaved(false); }
+    else { await saveJob(job); setSaved(true); }
+  };
 
   // Some sources (Bundesagentur für Arbeit) send the full text separately; load it here so it is read inside the app.
   useEffect(() => {
@@ -98,15 +111,19 @@ export default function JobDetails({ route }) {
             </Text>
           </View>
 
-          {!!job.link && (
-            <View style={styles.actionSection}>
+          <View style={styles.actionSection}>
+            <TouchableOpacity style={styles.saveBtn} onPress={toggleSaved}>
+              <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={18} color="#a5b4fc" />
+              <Text style={styles.saveText}>{saved ? 'Saved' : 'Save'}</Text>
+            </TouchableOpacity>
+            {!!job.link && (
               <TouchableOpacity style={styles.applyBtn} onPress={() => Linking.openURL(job.link)}>
                 <LinearGradient colors={['#6366f1', '#8b5cf6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.applyGradient}>
                   <Text style={styles.applyText}>{job.reference ? 'Apply: open original listing' : 'Apply Now'}</Text>
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -135,6 +152,8 @@ const styles = StyleSheet.create({
   note: { fontSize: 12, color: '#64748b', lineHeight: 18, marginTop: 10 },
   link: { color: '#a5b4fc', textDecorationLine: 'underline' },
   actionSection: { flexDirection: 'row', gap: 12, marginVertical: 20 },
+  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 18, borderRadius: 10, borderWidth: 1, borderColor: '#6366f1' },
+  saveText: { color: '#a5b4fc', fontSize: 15, fontWeight: '700' },
   applyBtn: { flex: 1, borderRadius: 10, overflow: 'hidden' },
   applyGradient: { alignItems: 'center', paddingVertical: 14 },
   applyText: { color: '#fff', fontSize: 15, fontWeight: '700' },
